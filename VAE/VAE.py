@@ -7,6 +7,7 @@ from typing import Tuple, Optional
 import torch
 from torch import Tensor
 
+import tqdm
 logger = logging.getLogger(__name__)
 logger = logging.getLogger("This")
 logger.setLevel(logging.INFO)
@@ -121,7 +122,7 @@ def elbo(x_i, mu: Tensor, log_sigma_square: Tensor, log_prob: Tensor):
 def criterion(x: Tensor, x_hat: Tensor, mu: Tensor, log_sigma_square: Tensor):
     # rep_loss = torch.nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     rep_loss = torch.nn.functional.mse_loss(x_hat, x, reduction='sum')
-    ones: Tensor = torch.ones(log_sigma_square.size())
+    ones: Tensor = torch.ones(log_sigma_square.size()).to(x.device)
     mu_square: Tensor = mu.pow(2)
     kl_div = -0.5 * torch.sum(ones + log_sigma_square - mu_square - log_sigma_square.exp())
     # return torch.mean((1 / 2) * torch.sum(ones + log_sigma_square - mu_square - log_sigma_square.exp())) + rep_loss
@@ -131,20 +132,24 @@ def criterion(x: Tensor, x_hat: Tensor, mu: Tensor, log_sigma_square: Tensor):
 def train(epochs: int, vae: VAE, dataloader: torch.utils.data.DataLoader):
     """Train vae for 'epochs' no. of epochs."""
 
-    LEARNING_RATE = 1e-3
+    LEARNING_RATE = 5e-3
     optim: torch.optim.Adam = torch.optim.Adam(
         params=vae.parameters(),
         lr=LEARNING_RATE,
         weight_decay=WEIGHT_DECAY
     )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    vae = vae.to(device)
     vae.train()  # put to training mode (collect grads etc.)
     enc: Encoder = vae.enc
     dec: Decoder = vae.dec
 
     for epoch in range(epochs):
-        for batch_idx, (x, _) in enumerate(dataloader):
+        epoch_loss = 0
+        for batch_idx, (x, _) in enumerate(tqdm.tqdm(dataloader)):
             optim.zero_grad()
             # posterior params
+            x = x.to(device) 
             enc_mu_sigma: Tuple[Tensor, Tensor] = enc(x)
             logger.info(f"@sample {batch_idx}: {enc_mu_sigma[0]}, {enc_mu_sigma[1]}")
             z: Tensor = torch.distributions.MultivariateNormal(
@@ -155,13 +160,14 @@ def train(epochs: int, vae: VAE, dataloader: torch.utils.data.DataLoader):
             dec_mu_sigma: Tuple[Tensor, Tensor] = dec(z)
             rec_distr: torch.distributions.Distribution = torch.distributions.MultivariateNormal(
                 loc=dec_mu_sigma[0], covariance_matrix=torch.diag_embed(torch.exp(dec_mu_sigma[1])))
-            print(f"size of x: {x.size()}")
             x_hat = torch.sigmoid(rec_distr.rsample())
             x_hat = rec_distr.rsample()
             loss: Tensor = criterion(x.flatten(start_dim=1), x_hat, enc_mu_sigma[0], enc_mu_sigma[1])
-            logger.info(f"Loss @ this stage: {loss}")
-            print(f"Loss @ this stage: {loss}")
+            # logger.info(f"Loss @ this stage: {loss}")
+            # print(f"Loss @ this stage: {loss}")
             loss.backward()
+            epoch_loss += loss.item()
             optim.step()
-        logger.info(f"Finished Iteration no {epoch}")
+        logger.info(f"Finished Iteration no {epoch} with loss: {epoch_loss}")
+        print(f"Finished Iteration no {epoch} with loss: {epoch_loss}")
     return None
