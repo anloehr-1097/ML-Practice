@@ -132,7 +132,7 @@ def criterion(x: Tensor, x_hat: Tensor, mu: Tensor, log_sigma_square: Tensor):
 def train(epochs: int, vae: VAE, dataloader: torch.utils.data.DataLoader):
     """Train vae for 'epochs' no. of epochs."""
 
-    LEARNING_RATE = 5e-3
+    LEARNING_RATE = 1e-2
     optim: torch.optim.Adam = torch.optim.Adam(
         params=vae.parameters(),
         lr=LEARNING_RATE,
