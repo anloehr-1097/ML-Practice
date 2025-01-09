@@ -141,6 +141,7 @@ def train(epochs: int, vae: VAE, dataloader: torch.utils.data.DataLoader):
     enc: Encoder = vae.enc
     dec: Decoder = vae.dec
 
+    
     for epoch in range(epochs):
         for batch_idx, (x, _) in enumerate(dataloader):
             optim.zero_grad()
