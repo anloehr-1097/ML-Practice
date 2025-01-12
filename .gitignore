@@ -3,3 +3,7 @@ VAE/MNIST/*
 *__pycache__*
 notes.org
 Pipfile
+Cpp/build/*
+Cpp/libtorch/*
+Cpp/.cache/*
+*.zip
