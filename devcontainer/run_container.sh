@@ -8,6 +8,7 @@ if [ "$#" -ne 1 ]; then
     echo "Commands:"
     echo "  start: Start the container"
     echo "  login: Log into the container"
+    echo "  stop: Stop the container"
 fi
 
 
@@ -16,6 +17,9 @@ if [ "$1" == "start" ]; then
     docker logs -f cpp_dev_container
 elif [ "$1" == "login" ]; then
     docker exec -it cpp_dev_container /bin/bash
+    # docker run -it $VOLUMES --name cpp_dev_container cpp_dev $COMMANDS
+elif [ "$1" == "stop" ]; then
+    docker compose down
     # docker run -it $VOLUMES --name cpp_dev_container cpp_dev $COMMANDS
 else 
     echo "Invalid command"
