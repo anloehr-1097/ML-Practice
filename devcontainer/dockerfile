@@ -1,0 +1,35 @@
+# Get the base Ubuntu image from Docker Hub
+FROM ubuntu:latest
+
+# Update apps on the base image
+RUN apt-get -y update && apt-get install -y
+
+# Install the Clang compiler
+RUN apt-get -y install clang
+RUN apt-get -y install wget
+RUN apt-get -y install clangd
+RUN apt-get -y install vim
+RUN apt-get -y install clangd
+RUN apt-get -y install git
+# Specify the working directory
+WORKDIR /home
+RUN wget "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.2%2Bcpu.zip"
+RUN wget "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz"
+RUN tar xvf nvim-linux-x86_64.tar.gz
+RUN mv nvim-linux-x86_64 nvim
+RUN mv nvim/bin/nvim /usr/local/bin
+RUN mv nvim/share/nvim /usr/local/share
+RUN mv nvim/lib/nvim /usr/local/lib
+
+RUN git clone "https://github.com/eradman/entr.git"
+RUN ls /home
+RUN apt -y install unzip
+RUN apt -y install make
+RUN apt -y install cmake
+RUN cd entr && ./configure && make test && make install
+RUN cd /home
+RUN unzip libtorch-cxx11-abi-shared-with-deps-2.1.2+cpu.zip
+
+# Run the output program from the previous step
+# ENTRYPOINT ["/bin/bash"]
+# CMD ["sleep infinity"]

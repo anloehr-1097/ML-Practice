@@ -169,6 +169,10 @@ int main() {
     torch::Tensor trans_out = trans.forward(x);
     std::cout << "Trans out: ";
     trans_out.print();
+    
+
+
+
     // torch::Tensor tensor_b = torch::rand({3, 3});
     // std::cout << tensor_b << std::endl;
     // torch::Tensor tensor_norm = torch::normal(0.0  , 1.0, 10);

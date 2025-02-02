@@ -8,3 +8,4 @@ Cpp/libtorch/*
 Cpp/.cache/*
 *.zip
 VAE/VAE.ipynb.orig
+devcontainer/*~
