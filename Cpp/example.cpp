@@ -5,6 +5,7 @@
 #include <ATen/ops/dist.h>
 #include <ATen/ops/rand.h>
 #include <ATen/ops/randn.h>
+#include <ATen/ops/relu.h>
 #include <ATen/ops/softmax.h>
 #include <ATen/ops/sqrt.h>
 #include <cassert>
@@ -15,6 +16,7 @@
 #include <torch/nn/module.h>
 #include <torch/nn/modules/linear.h>
 #include <torch/nn/modules/normalization.h>
+#include <torch/nn/options/transformer.h>
 #include <torch/torch.h>
 #include <iostream>
 #include <tuple>
@@ -169,6 +171,25 @@ int main() {
     torch::Tensor trans_out = trans.forward(x);
     std::cout << "Trans out: ";
     trans_out.print();
+
+
+    auto trans_options = torch::nn::TransformerOptions();
+    trans_options.d_model(4).nhead(1);
+
+    auto z = torch::rand({3, 3, 4});
+    auto official_trans = torch::nn::Transformer(trans_options);
+    auto y = official_trans->forward(z, z);
+    std::cout << y << std::endl;
+    auto s = y.sum();
+    s.backward();
+    std::cout << official_trans->parameters()[1].grad() << std::endl;
+
+
+
+
+
+
+
     
 
 
