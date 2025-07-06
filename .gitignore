@@ -9,3 +9,5 @@ Cpp/.cache/*
 *.zip
 VAE/VAE.ipynb.orig
 devcontainer/*~
+*.ipynb
+*.pt
