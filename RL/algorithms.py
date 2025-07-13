@@ -1,11 +1,53 @@
+from typing import Tuple
+from gymnasium.core import ObsType, ActType
+import torch
+import numpy as np
+
 from .value_function import (
     ValueFunction,
     ContinuousStateValueFunction,
     DiscreteStateValueFunction,
     DiscreteStateActionValueFunction,
 )
-from gymnasium.core import ObsType, ActType
-import torch
+
+from .types import StateAndOrAction
+
+
+def temporal_difference_update(
+    val_function: ValueFunction,
+    cur: StateAndOrAction,
+    nxt: StateAndOrAction,
+    ret: float,
+    alpha: float,
+    gamma: float,
+) -> None:
+
+    # assert that types match
+    assert (
+        isinstance(cur, Tuple)
+        and isinstance(val_function, DiscreteStateActionValueFunction)
+        or (
+            isinstance(cur, int)
+            and isinstance(val_function, DiscreteStateValueFunction)
+        )
+        or (
+            isinstance(cur, np.ndarray)
+            and isinstance(val_function, ContinuousStateValueFunction)
+        )
+    ), "Types do not match."
+
+    td_error: torch.Tensor = ret + gamma * val_function(nxt) - val_function(cur)
+
+    if isinstance(val_function, ContinuousStateValueFunction):
+        loss: torch.Tensor = -td_error
+        print(loss)
+        raise NotImplementedError
+        # gradient descent
+
+    elif isinstance(val_function, DiscreteStateActionValueFunction):
+        val_function.update(cur, float(alpha * td_error))
+
+    return None
 
 
 def state_temporal_difference_update(

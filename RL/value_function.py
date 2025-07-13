@@ -1,13 +1,11 @@
-from typing import TypeVar, Tuple
+from typing import Tuple
 import torch
 from torch import nn
 from abc import abstractmethod
 import gymnasium as gym
 from gymnasium.core import ObsType, ActType
 import numpy as np
-
-
-StateAndOrAction = TypeVar("StateAndOrAction", ObsType, Tuple[ObsType, ActType])  # type: ignore
+from .types import StateAndOrAction
 
 
 class ValueFunction:
@@ -38,6 +36,23 @@ class DiscreteStateActionValueFunction(ValueFunction):
 
     def update(self, key: Tuple[ObsType, ActType], value: float) -> None:
         self.values[int(key[0]), int(key[1])] += value  # type: ignore
+
+    def zero(self) -> None:
+        self.values.zero_()
+
+    @classmethod
+    def from_dict(cls, dct: dict, env: gym.Env) -> "DiscreteStateActionValueFunction":
+        val_func: "DiscreteStateActionValueFunction" = cls(env)
+        val_func.values = torch.zeros(
+            (int(env.observation_space.n), int(env.action_space.n))
+        )
+        for k, v in dct.items():
+            if not isinstance(k, tuple) or len(k) != 2:
+                raise ValueError("Keys must be tuples of (state, action).")
+            if not isinstance(v, float):
+                raise ValueError("Values must be floats.")
+            val_func.update(k, v)
+        return val_func
 
 
 class DiscreteStateValueFunction(ValueFunction):
